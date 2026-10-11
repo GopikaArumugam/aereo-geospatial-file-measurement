@@ -1,7 +1,7 @@
 # Geospatial File Measurement API
 
 [![Live Demo on Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://aereo-geospatial-file-measurement.vercel.app/)
-[![Swagger API Docs](https://img.shields.io/badge/API%20Docs-Swagger-009688?style=for-the-badge&logo=swagger)](https://aereo-geospatial-file-measurement.vercel.app/docs)
+[![Swagger API Docs](https://img.shields.io/badge/Swagger%20UI-Interactive%20API-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://aereo-geospatial-file-measurement.vercel.app/docs)
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
