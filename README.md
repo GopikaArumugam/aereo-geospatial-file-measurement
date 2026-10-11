@@ -1,5 +1,8 @@
 # Geospatial File Measurement API
 
+[![Live Demo on Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://aereo-geospatial-file-measurement.vercel.app/)
+[![Swagger API Docs](https://img.shields.io/badge/API%20Docs-Swagger-009688?style=for-the-badge&logo=swagger)](https://aereo-geospatial-file-measurement.vercel.app/docs)
+
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![Shapely](https://img.shields.io/badge/Shapely-2.1+-green.svg)](https://shapely.readthedocs.io/)
@@ -7,6 +10,12 @@
 [![Pytest Passed](https://img.shields.io/badge/pytest-15%2F15%20passed-brightgreen.svg)](https://pytest.org)
 [![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED.svg)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **🌐 Live Production Deployment:**
+> * **Interactive GIS Web Dashboard:** [https://aereo-geospatial-file-measurement.vercel.app/](https://aereo-geospatial-file-measurement.vercel.app/)
+> * **Interactive Swagger API Docs:** [https://aereo-geospatial-file-measurement.vercel.app/docs](https://aereo-geospatial-file-measurement.vercel.app/docs)
+> * **Alternative ReDoc Documentation:** [https://aereo-geospatial-file-measurement.vercel.app/redoc](https://aereo-geospatial-file-measurement.vercel.app/redoc)
+> * **Health Check Endpoint:** [https://aereo-geospatial-file-measurement.vercel.app/api/health/](https://aereo-geospatial-file-measurement.vercel.app/api/health/)
 
 A high-performance geospatial processing service and interactive GIS dashboard designed for drone, aerial surveying, and spatial intelligence platforms (built for the **AEREO Cloud** Engineering Assignment).
 
@@ -252,13 +261,16 @@ The API and Web UI will be instantly live at `http://localhost:8000`.
 
 ---
 
-### Deploying on Vercel
-This repository is configured for 1-click deployment on **Vercel** with native Serverless Python runtime (`api/index.py` and `vercel.json`):
+### Production Deployment on Vercel
+The service is live on **Vercel** with native Serverless Python runtime (`api/index.py` and `vercel.json`):
 
+* 🚀 **Production URL:** [https://aereo-geospatial-file-measurement.vercel.app/](https://aereo-geospatial-file-measurement.vercel.app/)
+* 📚 **Live Swagger Docs:** [https://aereo-geospatial-file-measurement.vercel.app/docs](https://aereo-geospatial-file-measurement.vercel.app/docs)
+
+To deploy your own instance:
 1. Import this repository into [Vercel](https://vercel.com/new).
-2. Leave the default build settings (Vercel automatically detects `vercel.json`).
+2. Leave default settings (Vercel automatically detects `vercel.json` and `@vercel/python`).
 3. Click **Deploy**.
-4. Your application will be live globally in ~1 minute on your `.vercel.app` domain.
 
 ---
 
