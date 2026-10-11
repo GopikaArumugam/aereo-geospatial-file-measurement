@@ -252,6 +252,16 @@ The API and Web UI will be instantly live at `http://localhost:8000`.
 
 ---
 
+### Deploying on Vercel
+This repository is configured for 1-click deployment on **Vercel** with native Serverless Python runtime (`api/index.py` and `vercel.json`):
+
+1. Import this repository into [Vercel](https://vercel.com/new).
+2. Leave the default build settings (Vercel automatically detects `vercel.json`).
+3. Click **Deploy**.
+4. Your application will be live globally in ~1 minute on your `.vercel.app` domain.
+
+---
+
 ## 5. API Reference & Specifications
 
 Interactive API interfaces:
