@@ -230,13 +230,28 @@ function renderRawJson(data) {
 function renderMap(geoData) {
   if (!currentMap) {
     currentMap = L.map("map", { zoomControl: true });
-    
-    // Clean CartoDB Positron basemap
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
-    }).addTo(currentMap);
+
+    // Free OpenStreetMap layer (No API key required)
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+
+    // Free Esri Satellite Imagery layer (Ideal for drone & mining geospatial data)
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    // Default to OpenStreetMap
+    osmLayer.addTo(currentMap);
+
+    // Layer switcher control
+    const baseMaps = {
+      "OpenStreetMap (Streets)": osmLayer,
+      "Satellite Imagery (Aerial)": satelliteLayer
+    };
+    L.control.layers(baseMaps).addTo(currentMap);
   }
 
   if (currentGeojsonLayer) {
