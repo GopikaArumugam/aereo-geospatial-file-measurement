@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEREO · Geospatial File Measurement API</title>
+  
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS for GIS Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Custom Style -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">AEREO</span>
+          <span class="brand-subtitle">Geospatial File Measurement API</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <a href="/docs" target="_blank" class="nav-btn nav-btn-outline">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          API Docs (Swagger)
+        </a>
+        <a href="/redoc" target="_blank" class="nav-btn nav-btn-outline">ReDoc</a>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-label">Engine Ready</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-layout">
+    
+    <!-- Left Column: Upload & Files History -->
+    <aside class="sidebar">
+      
+      <!-- Upload Card -->
+      <section class="card upload-card">
+        <h2 class="card-heading">Upload Geospatial File</h2>
+        <p class="card-desc">Supported formats: <strong>.zip</strong> (Shapefile) and <strong>.kml</strong></p>
+        
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".zip,.kml" class="file-input-hidden">
+          <div class="dropzone-content">
+            <svg class="upload-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p class="dropzone-text"><strong>Click to browse</strong> or drag & drop</p>
+            <span class="dropzone-hint">SHP (.zip with .shp/.dbf/.prj) or .kml</span>
+          </div>
+        </div>
+
+        <div id="uploadProgress" class="progress-bar-container hidden">
+          <div class="progress-bar-fill"></div>
+          <span class="progress-text">Processing features & transforming CRS...</span>
+        </div>
+
+        <!-- Sample Datasets for Fast Demo -->
+        <div class="sample-section">
+          <span class="sample-label">Quick Test Samples:</span>
+          <div class="sample-buttons">
+            <button class="btn-sample" id="btnSampleKml">Mining Pit Survey (.kml)</button>
+            <button class="btn-sample" id="btnSampleShp">Corridor Alignment (.zip)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Previous Files List -->
+      <section class="card history-card">
+        <div class="card-header-flex">
+          <h3 class="card-heading">Processed Files</h3>
+          <button class="btn-refresh" id="btnRefreshList" title="Refresh files list">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+        <div class="file-list" id="fileList">
+          <div class="empty-state">No files uploaded yet.</div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- Right Column: Results & GIS Visualization -->
+    <section class="content-panel">
+      
+      <!-- Placeholder when no file selected -->
+      <div id="noSelectionState" class="empty-dashboard">
+        <div class="empty-icon-box">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+            <line x1="8" y1="2" x2="8" y2="18"/>
+            <line x1="16" y1="6" x2="16" y2="22"/>
+          </svg>
+        </div>
+        <h3>No File Selected</h3>
+        <p>Upload a Shapefile (.zip) or KML (.kml) from the left panel, or pick a sample dataset to inspect measurements.</p>
+      </div>
+
+      <!-- Active File Dashboard -->
+      <div id="activeDashboard" class="active-dashboard hidden">
+        
+        <!-- File Header Banner -->
+        <div class="file-banner">
+          <div class="file-banner-meta">
+            <div class="file-title-row">
+              <h2 id="activeFilename" class="active-filename">mining_pit.kml</h2>
+              <span id="activeStatusBadge" class="status-badge badge-success">COMPLETED</span>
+            </div>
+            <div class="file-specs-row">
+              <span>File ID: <code id="activeFileId">-</code></span>
+              <span>•</span>
+              <span>Features: <strong id="activeFeatureCount">0</strong></span>
+              <span>•</span>
+              <span>Source CRS: <code id="activeSourceCrs">EPSG:4326</code></span>
+              <span>•</span>
+              <span>Projected CRS: <code id="activeProjectedCrs">EPSG:32643 (UTM 43N)</code></span>
+            </div>
+          </div>
+          <div class="file-banner-actions">
+            <button class="nav-btn nav-btn-outline" id="btnDownloadJson">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export JSON
+            </button>
+            <button class="nav-btn nav-btn-danger" id="btnDeleteActive" title="Delete file">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Total Measured Area (Polygons)</span>
+            <div class="kpi-value" id="kpiAreaSqM">0.00 <span class="kpi-unit">m²</span></div>
+            <div class="kpi-sub" id="kpiAreaSub">0.0000 ha · 0.0000 km²</div>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">Total Measured Length (Lines)</span>
+            <div class="kpi-value" id="kpiLengthM">0.00 <span class="kpi-unit">m</span></div>
+            <div class="kpi-sub" id="kpiLengthSub">0.0000 km</div>
+          </div>
+
+          <div class="kpi-card">
+            <span class="kpi-label">CRS Reprojection Strategy</span>
+            <div class="kpi-value-text" id="kpiCrsStrategy">Dynamic UTM Projection</div>
+            <div class="kpi-sub" id="kpiCrsSub">Ellipsoidal WGS84 &rarr; Planar UTM metric grid</div>
+          </div>
+        </div>
+
+        <!-- Tabs: Map Preview, Data Table, Raw JSON -->
+        <div class="tabs-container">
+          <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="tabMap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+              Spatial Map Preview
+            </button>
+            <button class="tab-btn" data-tab="tabTable">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Feature Measurements Table
+            </button>
+            <button class="tab-btn" data-tab="tabJson">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              API JSON Payload
+            </button>
+          </div>
+
+          <!-- Tab Content 1: Map -->
+          <div class="tab-content active" id="tabMap">
+            <div id="map" class="map-view"></div>
+          </div>
+
+          <!-- Tab Content 2: Table -->
+          <div class="tab-content" id="tabTable">
+            <div class="table-container">
+              <table class="data-table" id="featuresTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Geometry</th>
+                    <th>Metric Measurement</th>
+                    <th>Projected CRS</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="featuresTableBody">
+                  <!-- Generated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab Content 3: JSON -->
+          <div class="tab-content" id="tabJson">
+            <pre class="json-display"><code id="rawJsonContent">Loading...</code></pre>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application JS -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

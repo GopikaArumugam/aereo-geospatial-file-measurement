@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Ballari Mining Pit Drone Survey</name>
+    <description>AEREO Aerial Survey Dataset - Mining Extraction Pit, Haul Roads, and Boreholes</description>
+    
+    <!-- Feature 1: Mining Excavation Pit (Polygon) -->
+    <Placemark>
+      <name>Pit Extraction Sector Alpha</name>
+      <description>Active iron ore excavation zone</description>
+      <ExtendedData>
+        <Data name="SiteID"><value>BLR-PIT-01</value></Data>
+        <Data name="Operator"><value>AEREO Autonomous Fleet</value></Data>
+        <Data name="Material"><value>Hematite / Iron Ore</value></Data>
+      </ExtendedData>
+      <Polygon>
+        <extrude>1</extrude>
+        <altitudeMode>relativeToGround</altitudeMode>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              76.9180,15.1520,0 76.9230,15.1525,0 76.9240,15.1480,0 76.9200,15.1460,0 76.9170,15.1490,0 76.9180,15.1520,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+    <!-- Feature 2: Overburden Stockpile Dump (Polygon) -->
+    <Placemark>
+      <name>Overburden Stockpile OB-North</name>
+      <description>Designated non-mineral dump site</description>
+      <ExtendedData>
+        <Data name="SiteID"><value>BLR-OB-02</value></Data>
+        <Data name="CapacityPct"><value>68%</value></Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              76.9250,15.1530,0 76.9285,15.1535,0 76.9290,15.1495,0 76.9255,15.1490,0 76.9250,15.1530,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+    <!-- Feature 3: Main Haul Road Corridor (LineString) -->
+    <Placemark>
+      <name>Primary Haul Road Alignment</name>
+      <description>Heavy dumper truck transit road from pit to crusher</description>
+      <ExtendedData>
+        <Data name="RouteID"><value>RD-MAIN-01</value></Data>
+        <Data name="WidthMeters"><value>14.5</value></Data>
+      </ExtendedData>
+      <LineString>
+        <coordinates>
+          76.9150,15.1500,0 76.9170,15.1490,0 76.9200,15.1460,0 76.9250,15.1450,0 76.9290,15.1440,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+
+    <!-- Feature 4: Geological Borehole (Point) -->
+    <Placemark>
+      <name>Borehole Exploration MB-01</name>
+      <description>Core sample monitoring point</description>
+      <Point>
+        <coordinates>76.9195,15.1495,0</coordinates>
+      </Point>
+    </Placemark>
+
+    <!-- Feature 5: Drone Launch Base (Point) -->
+    <Placemark>
+      <name>GCS Drone Launch Pad</name>
+      <description>Survey ground control station</description>
+      <Point>
+        <coordinates>76.9140,15.1510,0</coordinates>
+      </Point>
+    </Placemark>
+
+  </Document>
+</kml>
