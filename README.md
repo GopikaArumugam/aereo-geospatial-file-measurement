@@ -1,4 +1,4 @@
-# AEREO · Geospatial File Measurement API
+# Geospatial File Measurement API
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
@@ -8,97 +8,82 @@
 [![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED.svg)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A high-performance, production-grade geospatial backend service and interactive GIS dashboard built for **AEREO Cloud** (Internship Engineering Assignment). 
+A high-performance geospatial processing service and interactive GIS dashboard designed for drone, aerial surveying, and spatial intelligence platforms (built for the **AEREO Cloud** Engineering Assignment).
 
-The service ingests geospatial files (**Shapefiles in `.zip`** and **KML `.kml`**), parses spatial features, attributes, and geometries, dynamically reprojects geographic coordinates (`EPSG:4326`) into optimal metric planar coordinate systems (UTM), and calculates high-precision metric measurements (**Polygon Area** in $m^2$, hectares, $km^2$ and **LineString Length** in meters, $km$).
+The service ingests geospatial vector files (**Shapefiles in `.zip`** and **KML `.kml`**), extracts spatial features and metadata, dynamically reprojects geographic coordinates (`EPSG:4326`) into optimal metric planar coordinate systems (UTM), and computes high-precision metric measurements (**Polygon Area** in $m^2$, hectares, $km^2$ and **LineString Length** in meters, $km$).
 
 ---
 
 ## 📑 Table of Contents
-- [1. Executive Summary & Company Context](#1-executive-summary--company-context)
-- [2. Requirements Traceability Matrix](#2-requirements-traceability-matrix)
-- [3. System Architecture & Component Design](#3-system-architecture--component-design)
-- [4. The Core Geospatial Challenge: CRS & Projection Math](#4-the-core-geospatial-challenge-crs--projection-math)
-- [5. API Reference & Documentation](#5-api-reference--documentation)
+- [1. Overview & Key Capabilities](#1-overview--key-capabilities)
+- [2. System Architecture & Workflow](#2-system-architecture--workflow)
+- [3. The Core Geospatial Challenge: CRS & Projection Math](#3-the-core-geospatial-challenge-crs--projection-math)
+- [4. Quickstart & Setup Guide](#4-quickstart--setup-guide)
+- [5. API Reference & Specifications](#5-api-reference--specifications)
 - [6. Web GIS Dashboard Walkthrough](#6-web-gis-dashboard-walkthrough)
-- [7. Setup & Local Execution](#7-setup--local-execution)
-- [8. Docker Containerization](#8-docker-containerization)
-- [9. Automated Testing & Verification](#9-automated-testing--verification)
-- [10. Design Decisions & Trade-offs](#10-design-decisions--trade-offs)
-- [11. Key Learnings & Future Scope](#11-key-learnings--future-scope)
+- [7. Automated Testing & Verification](#7-automated-testing--verification)
+- [8. Assignment Requirements Verification Matrix](#8-assignment-requirements-verification-matrix)
+- [9. Design Decisions & Trade-offs](#9-design-decisions--trade-offs)
+- [10. Key Learnings & Future Scope](#10-key-learnings--future-scope)
 
 ---
 
-## 1. Executive Summary & Company Context
+## 1. Overview & Key Capabilities
 
-**AEREO** builds *AEREO Cloud*, an enterprise geospatial intelligence platform that converts aerial drone photogrammetry and LiDAR surveys into 2D/3D visualizations, digital twins, and operational metrics for mining pits, construction infrastructure, energy facilities, and utilities.
+In aerial drone surveys across open-pit mines, construction corridors, renewable solar fields, and utility networks:
+* **Mining & Earthwork Teams** require exact land area calculations for excavation sectors, dumping yards, and stockpile footprints.
+* **Infrastructure Engineers** require high-precision distance measurements for transmission line alignments, pipeline rights-of-way, and haul roads.
+* **Raw Survey Vector Files** are commonly delivered as **ESRI Shapefiles** or **Google Earth KMLs**, typically recorded in unprojected angular coordinates (WGS84 `EPSG:4326`).
 
-In real-world drone surveying:
-- **Mining customers** require exact surface area calculations for open-pit excavation sectors, volume stockpile footprints, and environmental dumping zones.
-- **Infrastructure & utility customers** require exact distance measurements for transmission alignments, pipeline corridors, and haul roads.
-- **CAD/GIS exports** produce vector boundaries formatted as **ESRI Shapefiles** and **Google Earth KMLs**, often referenced in geographic coordinates (WGS84 `EPSG:4326`).
-
-This service provides a clean, resilient, and mathematically sound backend API for ingesting, validating, reprojecting, and measuring these datasets.
-
----
-
-## 2. Requirements Traceability Matrix
-
-Every single requirement from the AEREO assignment problem statement is fulfilled and mapped below:
-
-| # | Assignment Requirement | Implementation Detail | Source File(s) | Status |
-| :-: | :--- | :--- | :--- | :-: |
-| **1** | **Backend Framework**<br>FastAPI or Django+DRF | FastAPI 0.110+, asynchronous request handling, Pydantic v2 schemas, interactive Swagger UI (`/docs`). | [`app/main.py`](file:///d:/Aereo/app/main.py) | ✅ Complete |
-| **2** | **File Upload**<br>`POST /api/files/` | Accepts `.zip` containing Shapefile (`.shp`, `.dbf`, `.prj`, `.shx`) and `.kml`. Validates formats and file size limits. | [`app/routers/files.py`](file:///d:/Aereo/app/routers/files.py) | ✅ Complete |
-| **3** | **File Processing**<br>Extract ID, geom type, geom, CRS, properties | Extracts feature index, name, GeoJSON geometry, source CRS, and dictionary attributes. Handles missing fields gracefully. | [`app/services/file_parser.py`](file:///d:/Aereo/app/services/file_parser.py) | ✅ Complete |
-| **4** | **Measurements Calculation**<br>Polygon Area, LineString Length, Point skip | Polygon area ($m^2$, ha, $km^2$); LineString length ($m$, km); Point gracefully marked SKIPPED (0 area/length) without crashing. Self-intersecting polygons repaired via `make_valid`. | [`app/services/measurement.py`](file:///d:/Aereo/app/services/measurement.py) | ✅ Complete |
-| **5** | **CRS Handling**<br>Transform EPSG:4326 to projected CRS | Detects angular geographic coordinates; computes centroid and dynamically reprojects to the optimal local **Universal Transverse Mercator (UTM)** metric zone (`EPSG:326XX` / `EPSG:327XX`). | [`app/services/crs_service.py`](file:///d:/Aereo/app/services/crs_service.py) | ✅ Complete |
-| **6** | **API Design**<br>`POST /api/files/`<br>`GET /api/files/{id}/`<br>`GET /api/files/{id}/measurements/` | Full REST API implementation with additional bonus endpoints: GeoJSON export (`/{id}/features/`), file listing (`GET /api/files/`), deletion (`DELETE /{id}/`), and health check (`/api/health/`). | [`app/routers/files.py`](file:///d:/Aereo/app/routers/files.py) | ✅ Complete |
-| **7** | **Documentation**<br>Setup, API, Architecture, Decisions | Comprehensive README with architectural flowcharts, sequence diagrams, mathematical formulas, and cURL examples. | [`README.md`](file:///d:/Aereo/README.md) | ✅ Complete |
-| **8** | **Submission & Extras**<br>Learnings, Future Scope, Git Commits | Documented key learnings, scalable future scope, sample survey datasets, automated pytest suite (15 tests passing), and clean Git commit log. | [`README.md`](file:///d:/Aereo/README.md), [`sample_data/`](file:///d:/Aereo/sample_data) | ✅ Complete |
+### Core Features
+- **Multi-Format Vector Ingestion:** Accepts zipped Shapefile archives (`.shp`, `.shx`, `.dbf`, `.prj`) and Keyhole Markup Language (`.kml`) files up to 50MB.
+- **Dynamic Metric Reprojection:** Automatically resolves local **Universal Transverse Mercator (UTM)** zones based on feature centroids, eliminating the severe distortion of raw degree coordinates.
+- **Robust Geometry Engine:** Accurately computes metric **Area** for Polygons/MultiPolygons and **Length** for LineStrings/MultiLineStrings. Gracefully handles Points without system crashes.
+- **Topological Self-Healing:** Automatically repairs self-intersecting "bow-tie" rings and collapsed sliver geometries via `shapely.validation.make_valid`.
+- **Dual-Basemap GIS Dashboard:** Served directly from the backend with interactive Leaflet mapping, supporting both **OpenStreetMap** and **Esri High-Resolution World Satellite Imagery** (100% free, zero API key required).
+- **Interactive OpenAPI Interfaces:** Full Swagger UI (`/docs`) and ReDoc (`/redoc`) documentation with live testing capabilities.
 
 ---
 
-## 3. System Architecture & Component Design
+## 2. System Architecture & Workflow
 
-The application follows a clean, modular, service-oriented architecture:
-
+### Directory Layout
 ```
 d:\Aereo\
 ├── app/
 │   ├── main.py              # Application lifecycle, CORS middleware, route mounting
-│   ├── config.py            # Pydantic Settings configuration (paths, limits, defaults)
+│   ├── config.py            # Pydantic v2 application settings & environment variables
 │   ├── database.py          # SQLAlchemy 2.0 engine, SessionLocal, declarative base
-│   ├── models.py            # Relational database models (FileRecord, FeatureRecord)
-│   ├── schemas.py           # Pydantic v2 validation models & response serialization
+│   ├── models.py            # Database models (FileRecord, FeatureRecord)
+│   ├── schemas.py           # Pydantic validation schemas & API contracts
 │   ├── routers/
-│   │   ├── files.py         # /api/files/ endpoints (Upload, Detail, Measurements, GeoJSON, Delete)
-│   │   ├── health.py        # /api/health/ health check and capability probe
-│   │   └── samples.py       # /api/samples/ pre-packaged drone dataset distributor
+│   │   ├── files.py         # Ingestion, status, measurements, GeoJSON & deletion endpoints
+│   │   ├── health.py        # System health & capabilities check probe
+│   │   └── samples.py       # Pre-packaged demo survey dataset distributor
 │   ├── services/
 │   │   ├── crs_service.py   # Dynamic UTM zone resolution & PyProj geometry reprojection
-│   │   ├── measurement.py   # Shapely-powered metric area & length calculation engine
+│   │   ├── measurement.py   # Metric area & length computation + topology repair
 │   │   └── file_parser.py   # Shapefile (.zip) and KML (.kml) parser & feature extractor
 │   └── static/              # Executive GIS Web Dashboard (HTML5, CSS3, JS, Leaflet)
-│       ├── index.html       # Clean single-page application markup
+│       ├── index.html       # Clean single-page application layout
 │       ├── css/style.css    # Minimalist slate/enterprise styling
-│       └── js/app.js        # Map renderer, layer toggle, file upload controller
-├── sample_data/             # Pre-built test datasets (Ballari Mining Pit KML, Corridor Shapefile ZIP)
+│       └── js/app.js        # Leaflet map controller, layer switcher, upload handler
+├── sample_data/             # Pre-built test datasets (Ballari Mining Pit KML, Corridor SHP ZIP)
 ├── scripts/
-│   └── generate_samples.py  # Script to programmatically generate test survey files
-├── tests/                   # Automated pytest suite (Unit & Integration tests)
+│   └── generate_samples.py  # Script for generating sample survey datasets
+├── tests/                   # Automated pytest suite (15 unit & integration tests)
 │   ├── conftest.py          # Thread-safe in-memory SQLite fixtures with StaticPool
 │   ├── test_api_endpoints.py# End-to-end API lifecycle tests
 │   ├── test_crs_service.py  # Mathematical UTM zone & coordinate projection tests
 │   ├── test_file_parser.py  # Shapefile ZIP and KML XML extraction tests
 │   └── test_measurements.py # Area, length, make_valid, and point skip tests
-├── Dockerfile               # Production container image
-├── docker-compose.yml       # Multi-container orchestration definition
+├── Dockerfile               # Production container definition
+├── docker-compose.yml       # Docker Compose multi-service definition
 ├── requirements.txt         # Pinned Python package dependencies
-└── pytest.ini               # Test discovery configuration
+└── pytest.ini               # Pytest environment configuration
 ```
 
-### End-to-End Processing Flow
+### Processing Flowchart
 
 ```mermaid
 flowchart TD
@@ -170,7 +155,7 @@ sequenceDiagram
 
 ---
 
-## 4. The Core Geospatial Challenge: CRS & Projection Math
+## 3. The Core Geospatial Challenge: CRS & Projection Math
 
 ### The Fundamental Problem: Why Angular Coordinates ($EPSG:4326$) Fail
 Most raw drone survey data, GPS waypoints, and KML files are provided in **WGS84 (`EPSG:4326`)**, where coordinates represent angular degrees:
@@ -217,7 +202,57 @@ Different GIS tools use varying axis orders (e.g., $(y, x)$ vs. $(x, y)$). We st
 
 ---
 
-## 5. API Reference & Documentation
+## 4. Quickstart & Setup Guide
+
+### Prerequisites
+- Python 3.10 or newer
+- Git
+
+### 1. Clone & Set Up Virtual Environment
+```bash
+git clone https://github.com/GopikaArumugam/aereo-geospatial-file-measurement.git
+cd aereo-geospatial-file-measurement
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# Windows (PowerShell):
+.\venv\Scripts\Activate.ps1
+# Linux / macOS:
+source venv/bin/activate
+```
+
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Generate Sample Datasets
+```bash
+python scripts/generate_samples.py
+```
+
+### 4. Start the Application Server
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+Open your browser at:
+* **Web UI Dashboard:** [http://localhost:8000/](http://localhost:8000/)
+* **Interactive Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+### Running with Docker
+Deploy the complete application in a standardized container with one command:
+```bash
+docker-compose up --build
+```
+The API and Web UI will be instantly live at `http://localhost:8000`.
+
+---
+
+## 5. API Reference & Specifications
 
 Interactive API interfaces:
 - **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
@@ -417,71 +452,9 @@ Served directly from the application at **`http://localhost:8000/`**:
 
 ---
 
-## 7. Setup & Local Execution
+## 7. Automated Testing & Verification
 
-### Prerequisites
-- Python 3.10 or newer
-- Git
-
-### 1. Clone & Set Up Virtual Environment
-```bash
-git clone <your-repository-url>
-cd Aereo
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# Linux / macOS:
-source venv/bin/activate
-```
-
-### 2. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Generate Sample Datasets
-```bash
-python scripts/generate_samples.py
-```
-
-### 4. Start the Application Server
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-Open your browser at:
-* **Web UI Dashboard:** [http://localhost:8000/](http://localhost:8000/)
-* **Interactive Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-
----
-
-## 8. Docker Containerization
-
-Deploy the complete application inside a standardized Linux container with zero host dependencies:
-
-```bash
-docker-compose up --build
-```
-The API and Web UI will be instantly live at `http://localhost:8000`.
-
-To run in the background (detached mode):
-```bash
-docker-compose up -d
-```
-
-To stop and remove containers:
-```bash
-docker-compose down
-```
-
----
-
-## 9. Automated Testing & Verification
-
-The test suite covers:
+The automated test suite covers:
 - Input validation (unsupported extensions, oversized payloads).
 - Dynamic UTM zone calculation across multiple continents and hemispheres.
 - Coordinate reprojection accuracy with PyProj.
@@ -518,7 +491,24 @@ tests/test_measurements.py::test_self_intersecting_polygon_make_valid PASSED [10
 
 ---
 
-## 10. Design Decisions & Trade-offs
+## 8. Assignment Requirements Verification Matrix
+
+For reviewers evaluating this project against the official AEREO Engineering Assignment specifications:
+
+| # | Specification | Fulfillment Description | Source Files | Status |
+| :-: | :--- | :--- | :--- | :-: |
+| **1** | **Backend Framework** | High-performance FastAPI backend with typed Pydantic v2 schemas and auto-generated Swagger UI (`/docs`). | [`app/main.py`](file:///d:/Aereo/app/main.py) | ✅ Verified |
+| **2** | **File Upload (`POST /api/files/`)** | Accepts `.zip` containing Shapefile (`.shp`, `.dbf`, `.prj`, `.shx`) and `.kml`. Enforces format and size limits. | [`app/routers/files.py`](file:///d:/Aereo/app/routers/files.py) | ✅ Verified |
+| **3** | **File Processing** | Extracts feature index, name, geometry type, GeoJSON geometry, source CRS, and dictionary attributes. | [`app/services/file_parser.py`](file:///d:/Aereo/app/services/file_parser.py) | ✅ Verified |
+| **4** | **Measurements Calculation** | Polygon Area ($m^2$, ha, $km^2$); LineString Length ($m$, km); Point gracefully skipped (0 area/length) without crashing. Self-intersecting rings repaired via `make_valid`. | [`app/services/measurement.py`](file:///d:/Aereo/app/services/measurement.py) | ✅ Verified |
+| **5** | **CRS Handling** | Accurately identifies $EPSG:4326$ angular coordinates; dynamically calculates local centroid UTM zone and reprojects to planar metric grid. | [`app/services/crs_service.py`](file:///d:/Aereo/app/services/crs_service.py) | ✅ Verified |
+| **6** | **API Design** | Full implementation of required endpoints (`POST /api/files/`, `GET /api/files/{id}/`, `GET /api/files/{id}/measurements/`) plus bonus GeoJSON export and file deletion. | [`app/routers/files.py`](file:///d:/Aereo/app/routers/files.py) | ✅ Verified |
+| **7** | **Documentation** | Thorough documentation covering setup, architecture flowcharts, sequence diagrams, mathematical derivations, and cURL examples. | [`README.md`](file:///d:/Aereo/README.md) | ✅ Verified |
+| **8** | **Submission & Extras** | Clean public GitHub repository, automated pytest test suite (15 tests passing), learnings, future scope, and atomic Git commit history. | [`README.md`](file:///d:/Aereo/README.md), [`sample_data/`](file:///d:/Aereo/sample_data) | ✅ Verified |
+
+---
+
+## 9. Design Decisions & Trade-offs
 
 ### 1. Framework: FastAPI vs. Django + DRF
 * **Decision:** Built with **FastAPI**.
@@ -538,7 +528,7 @@ tests/test_measurements.py::test_self_intersecting_polygon_make_valid PASSED [10
 
 ---
 
-## 11. Key Learnings & Future Scope
+## 10. Key Learnings & Future Scope
 
 ### Key Learnings
 1. **Cartographic Precision Matters:** A naive calculation on latitude/longitude degrees fails completely in real-world surveying. Understanding the mathematical difference between an ellipsoidal datum ($WGS84$) and a planar conformal projection ($UTM$) is essential for engineering geospatial intelligence.
